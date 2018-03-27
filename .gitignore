@@ -1,5 +1,5 @@
 
-# Created by https://www.gitignore.io/api/macos
+#--- mac os files ---#
 
 ### macOS ###
 *.DS_Store
@@ -28,5 +28,7 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+#--- project files ---#
 
-# End of https://www.gitignore.io/api/macos
+node_modules
+package-lock.json
