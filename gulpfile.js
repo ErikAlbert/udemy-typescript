@@ -1,3 +1,20 @@
+// Defining requirements
+var gulp = require('gulp');
+var sass = require('gulp-sass');
+var browserify = require("browserify");
+var source = require('vinyl-source-stream');
+var buffer = require("vinyl-buffer");
+var tsify = require("tsify");
+var glob = require('glob');
+var watch = require('gulp-watch');
+var cssnano = require('gulp-cssnano');
+var rename = require('gulp-rename');
+var uglify = require('gulp-uglify');
+var gulpif = require('gulp-if');
+var sourcemaps = require('gulp-sourcemaps');
+var browserSync = require('browser-sync').create();
+var options = require('./package.json').options;
+
 // Defining base paths
 var basePaths = {
     bower: './bower_components/',
@@ -5,9 +22,9 @@ var basePaths = {
     src: './src/',
     sass: './dev/sass/**/*.scss',
     sass_src: './src/**/**/*.scss',
-    ts: './dev/ts/**/*.ts',
-    js: './dev/js/**/*.js',
-    js_src: './src/**/**/*.js'
+    ts: glob.sync('./dev/ts/**/*.ts'),
+    js: glob.sync('./dev/js/**/*.js'),
+    js_src: glob.sync('./src/**/**/*.js'),
 };
 
 // browser-sync watched files
@@ -17,30 +34,13 @@ var browserSyncWatchFiles = [
     './js/**/*.js',
     './*.html'
 ];
+
 // browser-sync options
 // see: https://www.browsersync.io/docs/options/
 var browserSyncOptions = {
     proxy: "localhost/github/udemy-typescript/",
     notify: true
 };
-
-// Defining requirements
-var gulp = require('gulp');
-var rmLines = require('gulp-rm-lines');
-var sass = require('gulp-sass');
-var typescript = require('gulp-typescript');
-var watch = require('gulp-watch');
-var concat = require('gulp-concat');
-var cssnano = require('gulp-cssnano');
-var rename = require('gulp-rename');
-var uglify = require('gulp-uglify');
-var imagemin = require('gulp-imagemin');
-var gulpif = require('gulp-if');
-var rimraf = require('gulp-rimraf');
-var sourcemaps = require('gulp-sourcemaps');
-var browserSync = require('browser-sync').create();
-var del = require('del');
-var options = require('./package.json').options;
 
 var supported = [
     'last 4 versions',
@@ -52,7 +52,7 @@ var supported = [
     'android 4'
 ];
 
-gulp.task('sass-dev', function () {
+gulp.task('sass', function () {
     return gulp.src(basePaths.sass)
         .pipe(gulpif(options.sourcemaps, sourcemaps.init({
             loadMaps: true
@@ -80,16 +80,25 @@ gulp.task('sass-dev', function () {
         .pipe(gulp.dest('./css'))
 });
 
-gulp.task('ts-dev', function () {
-    return gulp.src(basePaths.ts)
-        .pipe(gulpif(options.sourcemaps, sourcemaps.init()))
-        .pipe(typescript({
-            module: 'amd',
-            target: 'es5',
-            removeComments: true,
-            noImplicitAny: true,
-            outFile: 'main.js' //This property can only be used with amd or system modules. It reunites all compiled files into one file.
-        }))
+gulp.task("browserify", function () {
+    return browserify({
+            debug: true,
+            entries: [basePaths.ts, basePaths.js],
+            cache: {},
+            packageCache: {}
+        })
+        .plugin(tsify)
+        .transform('babelify', {
+            presets: ['es2015'],
+            extensions: ['.ts', '.js'],
+            sourceMaps: true
+        })
+        .bundle()
+        .pipe(source('main.js'))
+        .pipe(buffer())
+        .pipe(gulpif(options.sourcemaps, sourcemaps.init({
+            loadMaps: true
+        })))
         .pipe(uglify())
         .pipe(rename({
             suffix: ".min"
@@ -97,41 +106,14 @@ gulp.task('ts-dev', function () {
         .pipe(gulpif(options.sourcemaps, sourcemaps.write(undefined, {
             sourceRoot: null
         })))
-        .pipe(gulp.dest('./js'))
+        .pipe(gulp.dest("./js"));
 });
 
-// Run:
-// gulp javascript
-// Ufglifies and minifies all javascript files
-gulp.task('js-dev', function () {
-    return gulp.src(basePaths.js)
-        .pipe(gulpif(options.sourcemaps, sourcemaps.init()))
-        .pipe(uglify())
-        .pipe(rename({
-            suffix: ".min"
-        }))
-        .pipe(gulpif(options.sourcemaps, sourcemaps.write(undefined, {
-            sourceRoot: null
-        })))
-        .pipe(gulp.dest('./js'))
+gulp.task('dev', ['sass', 'browserify', 'browser-sync'], function () {
+    gulp.watch([basePaths.sass, basePaths.sass_src], ['sass']);
+    gulp.watch([basePaths.ts, basePaths.js, basePaths.js_src], ['browserify']);
 });
 
-gulp.task('dev', ['sass-dev', 'ts-dev', 'js-dev', 'browser-sync'], function () {
-    gulp.watch([basePaths.sass, basePaths.sass_src], ['sass-dev']);
-    gulp.watch(basePaths.ts, ['ts-dev']);
-    gulp.watch([basePaths.js, basePaths.js_src], ['js-dev']);
-});
-
-// Run:
-// gulp clean-source
-// Delete any file inside the /src folder
-gulp.task('clean-source', function () {
-    return del(['src/**/*', ]);
-});
-
-// Run:
-// gulp browser-sync
-// Starts browser-sync task for starting the server.
 gulp.task('browser-sync', function () {
     browserSync.init(browserSyncWatchFiles, browserSyncOptions);
 });

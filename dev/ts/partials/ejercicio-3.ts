@@ -32,7 +32,7 @@ type Villain = {
   mutant: boolean,
 };
 
-var villanos: Villain[] = [
+let villanos: Villain[] = [
   {
     name: "Lex Luthor",
     age: 54,
