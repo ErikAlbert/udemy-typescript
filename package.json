@@ -46,7 +46,6 @@
         "sweetalert2": "~7.3.2",
         "tether": "^1.4.3",
         "tsify": "^3.0.4",
-        "typescript": "^2.8.1",
         "vinyl-buffer": "^1.0.1",
         "vinyl-source-stream": "^2.0.0",
         "watchify": "^3.11.0"

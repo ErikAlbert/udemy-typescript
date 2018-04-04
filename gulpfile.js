@@ -1,22 +1,20 @@
 var gulp = require('gulp');
 var source = require('vinyl-source-stream');
-var babelify = require('babelify');
-var watchify = require('watchify');
-var exorcist = require('exorcist');
-var browserify = require('browserify');
-var browserSync = require('browser-sync').create();
+var buffer = require("vinyl-buffer");
+var gulpif = require('gulp-if');
 var glob = require('glob');
 var log = require('fancy-log');
-var typescript = require('gulp-typescript');
+var browserify = require('browserify');
+var watchify = require('watchify');
 var tsify = require("tsify");
-var buffer = require("vinyl-buffer");
+var babelify = require('babelify');
+var browserSync = require('browser-sync').create();
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
 var sourcemaps = require('gulp-sourcemaps');
-var gulpif = require('gulp-if');
 var options = require('./package.json').options;
 
-// Defining base paths
+
 var basePaths = {
     node: './node_modules/',
     src: './src/',
@@ -43,16 +41,19 @@ var browserSyncOptions = {
     notify: true
 };
 
-function build(bundle) {
+var bundleOpts = {
+    debug: true,
+    entries: [basePaths.ts, basePaths.js],
+    cache: {},
+    packageCache: {}
+};
+
+function buildBundle(bundle) {
 
     log('Compiling bundle...');
+
     bundle.bundle()
-        .on('error', (err) => {
-            browserSync.notify("Browserify Error!");
-            this.emit("end");
-            console.error(err)
-        })
-        .pipe(exorcist('./js/main.min.js.map'))
+        .on('error', () => log.error.bind(log, 'Browserify Error'))
         .pipe(source('main.js'))
         .pipe(buffer())
         .pipe(gulpif(options.sourcemaps, sourcemaps.init({
@@ -71,41 +72,20 @@ function build(bundle) {
         }));
 }
 
-// gulp.task('lib', () => {
-//     let b = browserify({
-//         //debug: true,
-//         entries: [basePaths.lib],
-//         cache: {},
-//         packageCache: {}
-//     });
-//     watchify.args.debug = true;
-//     b = watchify(b.plugin(tsify).transform('babelify', {
-//         presets: ['es2015'],
-//         extensions: ['.js']
-//     }), watchify.args)
-//     b.on('update', () => buildBundle(b, 'lib.js'));
-
-//     return buildBundle(b, 'lib.js')
-// });
-
 gulp.task('scripts', () => {
-    let bundle = browserify({
-        debug: true,
-        entries: [basePaths.ts, basePaths.js],
-        cache: {},
-        packageCache: {}
-    }).watchify(b.plugin(tsify).transform('babelify', {
+    let bundle = browserify(bundleOpts, watchify.args);
+    bundle = watchify(bundle.plugin(tsify).transform('babelify', {
         presets: ['es2015'],
         extensions: ['.js']
-    })).on('update', () => buildBundle(b));
+    }));
+    bundle.on('update', () => buildBundle(bundle));
+    bundle.on('log', () => log.info);
 
-    return build(bundle);
+    return buildBundle(bundle);
 });
 
 gulp.task('browser-sync', function () {
     browserSync.init(browserSyncWatchFiles, browserSyncOptions);
 });
 
-gulp.task('dev', ['scripts', 'browser-sync'], function () {
-    //browserSync.init(browserSyncWatchFiles, browserSyncOptions);
-});
+gulp.task('dev', ['scripts', 'browser-sync']);
