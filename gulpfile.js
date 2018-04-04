@@ -14,7 +14,6 @@ var rename = require('gulp-rename');
 var sourcemaps = require('gulp-sourcemaps');
 var options = require('./package.json').options;
 
-
 var basePaths = {
     node: './node_modules/',
     src: './src/',
@@ -75,7 +74,7 @@ function buildBundle(bundle) {
 gulp.task('scripts', () => {
     let bundle = browserify(bundleOpts, watchify.args);
     bundle = watchify(bundle.plugin(tsify).transform('babelify', {
-        presets: ['es2015'],
+        presets: ['env'],
         extensions: ['.js']
     }));
     bundle.on('update', () => buildBundle(bundle));
@@ -89,3 +88,70 @@ gulp.task('browser-sync', function () {
 });
 
 gulp.task('dev', ['scripts', 'browser-sync']);
+
+gulp.task('copy-vendor', function () {
+
+    ////////////////// All Bootstrap 4 Vendor Files /////////////////////////
+    // Copy all Bootstrap JS files
+    gulp.src(basePaths.node + 'bootstrap/dist/js/**/bootstrap.min.js')
+        .pipe(gulp.dest(basePaths.src + '/js/bootstrap'));
+
+    // Copy all Bootstrap SCSS files
+    gulp.src(basePaths.node + 'bootstrap/scss/**/*.scss')
+        .pipe(gulp.dest(basePaths.src + '/sass/bootstrap4'));
+    ////////////////// End Bootstrap 4 Vendor Files /////////////////////////
+
+    ////////////////// All Bourbon Assets /////////////////////////
+    gulp.src(basePaths.node + 'bourbon/core/*.scss')
+        .pipe(gulp.dest(basePaths.src + '/sass/bourbon'));
+
+    gulp.src(basePaths.node + 'bourbon/core/bourbon/helpers/*.scss')
+        .pipe(gulp.dest(basePaths.src + '/sass/bourbon/helpers'));
+
+    gulp.src(basePaths.node + 'bourbon/core/bourbon/library/*.scss')
+        .pipe(gulp.dest(basePaths.src + '/sass/bourbon/library'));
+
+    gulp.src(basePaths.node + 'bourbon/core/bourbon/settings/*.scss')
+        .pipe(gulp.dest(basePaths.src + '/sass/bourbon/settings'));
+
+    gulp.src(basePaths.node + 'bourbon/core/bourbon/utilities/*.scss')
+        .pipe(gulp.dest(basePaths.src + '/sass/bourbon/utilities'));
+
+    gulp.src(basePaths.node + 'bourbon/core/bourbon/validators/*.scss')
+        .pipe(gulp.dest(basePaths.src + '/sass/bourbon/validators'));
+
+    ////////////////// End Bourbon Assets /////////////////////////
+
+    // Copy all Font Awesome Fonts
+    gulp.src(basePaths.node + 'font-awesome/fonts/**/*.{ttf,woff,woff2,eof,svg}')
+        .pipe(gulp.dest('./fonts/fontawesome'));
+
+    // Copy all Font Awesome SCSS files
+    gulp.src(basePaths.node + 'font-awesome/scss/*.scss')
+        .pipe(gulp.dest(basePaths.src + '/sass/fontawesome'));
+
+    // Copy jQuery
+    gulp.src(basePaths.node + 'jquery/dist/jquery.min.js')
+        .pipe(gulp.dest(basePaths.src + '/js/jquery/'));
+
+    gulp.src(basePaths.node + 'jquery-migrate/dist/jquery-migrate.min.js')
+        .pipe(gulp.dest(basePaths.src + '/js/jquery/'));
+
+    gulp.src(basePaths.node + 'jquery-validation/dist/**/*.js')
+        .pipe(gulp.dest(basePaths.src + '/js/jquery/jquery-validation'));
+
+    // Copy Tether JS files
+    gulp.src(basePaths.node + 'tether/dist/js/tether.min.js')
+        .pipe(gulp.dest(basePaths.src + '/js/bootstrap'));
+
+    // Copy Popper JS files
+    gulp.src(basePaths.node + 'popper.js/dist/umd/popper.min.js')
+        .pipe(gulp.dest(basePaths.src + '/js/bootstrap'));
+
+    // Copy Sweet Alert files
+    gulp.src(basePaths.node + 'sweetalert2/src/*.scss')
+        .pipe(gulp.dest(basePaths.src + '/sass/sweetalert2'));
+
+    gulp.src(basePaths.node + 'sweetalert2/dist/sweetalert2.min.js')
+        .pipe(gulp.dest(basePaths.src + '/js/sweetalert2'));
+});
