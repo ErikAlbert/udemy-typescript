@@ -1,10 +1,5 @@
 @charset "UTF-8";
-
-//Vendor files
-@import "vendor/all";
-
-//Setting files
-@import "settings/all";
-
-//Partial page files
+@import "variables/variables";
+@import "mixins/all";
+@import "vendor/vendor";
 @import "partials/all";
