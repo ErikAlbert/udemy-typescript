@@ -21,8 +21,8 @@ var basePaths = {
   dist: "./dist",
   dev: {
     sass: "./dev/sass/**/*.scss",
-    ts: glob.sync("./dev/ts/*.ts"),
-    js: glob.sync("./dev/js/*.js")
+    ts: glob.sync("./dev/ts/**/*.ts"),
+    js: glob.sync("./dev/js/**/*.js")
   }
 };
 
